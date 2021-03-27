@@ -6,66 +6,82 @@ using System.Text;
 
 namespace DependencyIsolation
 {
-	public class OrderService
-	{
-		private string _filePath = @"C:\temp\testOrders.csv";
+    public interface IOrderReader
+    {
+        List<Order> GetOrders();
+    }
 
-		public void SyncBookOrders()
+    public class OrderReader : IOrderReader
+    {
+        private string _filePath = @"C:\temp\testOrders.csv";
+
+        public List<Order> GetOrders()
+        {
+            // parse csv file to get orders
+            var result = new List<Order>();
+
+            // directly depend on File I/O
+            using (StreamReader sr = new StreamReader(this._filePath, Encoding.UTF8))
+            {
+                int rowCount = 0;
+
+                while (sr.Peek() > -1)
+                {
+                    rowCount++;
+
+                    var content = sr.ReadLine();
+
+                    // Skip CSV header line
+                    if (rowCount > 1)
+                    {
+                        string[] line = content.Trim().Split(',');
+
+                        result.Add(this.Mapping(line));
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private Order Mapping(string[] line)
+        {
+            var result = new Order
+            {
+                ProductName = line[0],
+                Type = line[1],
+                Price = Convert.ToInt32(line[2]),
+                CustomerName = line[3]
+            };
+
+            return result;
+        }
+    }
+
+    public class OrderService
+	{
+        private readonly IOrderReader _orderReader;
+        private readonly IBookDao _bookDao;
+
+        public OrderService(IOrderReader orderReader, IBookDao bookDao)
+        {
+            _orderReader = orderReader;
+            _bookDao = bookDao;
+        }
+
+        public void SyncBookOrders()
 		{
-			var orders = GetOrders();
+			var orders = _orderReader.GetOrders(); // 抓 order 
 
 			// only get orders of book
-			var ordersOfBook = orders.Where(x => x.Type == "Book");
+			var ordersOfBook = orders.Where(x => x.Type == "Book"); // 過濾到只能是書
 
-			var bookDao = new BookDao();
-			foreach (var order in ordersOfBook)
+            foreach (var order in ordersOfBook)
 			{
-				bookDao.Insert(order);
+				_bookDao.Insert(order);
 			}
 		}
-
-		private List<Order> GetOrders()
-		{
-			// parse csv file to get orders
-			var result = new List<Order>();
-
-			// directly depend on File I/O
-			using (StreamReader sr = new StreamReader(this._filePath, Encoding.UTF8))
-			{
-				int rowCount = 0;
-
-				while (sr.Peek() > -1)
-				{
-					rowCount++;
-
-					var content = sr.ReadLine();
-
-					// Skip CSV header line
-					if (rowCount > 1)
-					{
-						string[] line = content.Trim().Split(',');
-
-						result.Add(this.Mapping(line));
-					}
-				}
-			}
-
-			return result;
-		}
-
-		private Order Mapping(string[] line)
-		{
-			var result = new Order
-			{
-				ProductName = line[0],
-				Type = line[1],
-				Price = Convert.ToInt32(line[2]),
-				CustomerName = line[3]
-			};
-
-			return result;
-		}
-	}
+    }
 
 	public class Order
 	{
@@ -78,9 +94,14 @@ namespace DependencyIsolation
 		public string CustomerName { get; set; }
 	}
 
-	public class BookDao
-	{
-		internal void Insert(Order order)
+    public interface IBookDao
+    {
+        void Insert(Order order);
+    }
+
+    public class BookDao : IBookDao
+    {
+		public void Insert(Order order)
 		{
 			throw new NotImplementedException();
 		}
