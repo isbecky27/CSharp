@@ -12,23 +12,24 @@ namespace csharp
 		{
 			var studentRepo = new StudentRepo();
 
-			//var allStudents = studentRepo.GetStudents();
-			//PrintStudentNames(allStudents);
+			var allStudents = studentRepo.GetStudents();
+			PrintStudentNames(allStudents);
 
+			var bobDetail = studentRepo.GetStudentByName("Bob");
+			//Console.WriteLine(PrintProperties(bobDetail));
+			Console.WriteLine(bobDetail.Name + "\nBirthday : " + bobDetail.Birthday.ToShortDateString() + "\nGender : " + bobDetail.Gender + "\nTuition : " + bobDetail.Tuition + "\nGrade : " + bobDetail.Grade);
 
-			//var bobDetail = studentRepo.GetStudentByName("Bob");
+			var bornOnFirst = studentRepo.GetStudentWhoIsBornOnFirst();
+			PrintStudentNames(bornOnFirst);
 
+			var isExistMaleStudent = studentRepo.IsExistMaleStudent();
+			Console.WriteLine("IsExistMaleStudent : " + isExistMaleStudent);
 
-			//var bornOnFirst = studentRepo.GetStudentWhoIsBornOnFirst();
+			var tuitionSum = studentRepo.GetTuitionSum();
+			Console.WriteLine("Tuition Sum : " + tuitionSum);
 
-
-			//var isExistMaleStudent = studentRepo.IsExistMaleStudent();
-
-
-			//var tuitionSum = studentRepo.GetTuitionSum();
-
-
-			//var averageGrade = studentRepo.GetAverageGrade();
+			var averageGrade = studentRepo.GetAverageGrade();
+			Console.WriteLine("Average Grade : " + averageGrade);
 
 			Console.ReadKey();
 		}
@@ -76,32 +77,40 @@ namespace csharp
 
 		public List<Student> GetStudents()
 		{
-			throw new NotImplementedException();
+			return _students;
+			//throw new NotImplementedException();
 		}
 
 		public Student GetStudentByName(string name)
 		{
-			throw new NotImplementedException();
+			return _students.FirstOrDefault(x => x.Name == name);
+			//throw new NotImplementedException();
 		}
 
 		public List<Student> GetStudentWhoIsBornOnFirst()
 		{
-			throw new NotImplementedException();
+			return _students.Where(x => x.Birthday.Day == 1).ToList();
+			//throw new NotImplementedException();
 		}
 
 		public bool IsExistMaleStudent()
 		{
-			throw new NotImplementedException();
+			return _students.Any(x => x.Gender == Gender.Male);
+			// throw new NotImplementedException();
 		}
 
 		public double GetTuitionSum()
 		{
-			throw new NotImplementedException();
+			IEnumerable<double> tuition = _students.Select(x => x.Tuition);
+			return tuition.Aggregate(0.0, (s, x) => s += x);
+			//throw new NotImplementedException();
 		}
 
 		public int GetAverageGrade()
 		{
-			throw new NotImplementedException();
+			IEnumerable<int> grade = _students.Select(x => x.Grade);
+			return grade.Aggregate(0, (s, x) => s += x) / grade.Count();
+			//throw new NotImplementedException();
 		}
 	}
 
@@ -110,7 +119,7 @@ namespace csharp
 		public string Name { get; set; }
 		public DateTime Birthday { get; set; }
 		public Gender Gender { get; set; }
-		public double Tuition { get;set; }
+		public double Tuition { get; set; }
 		public int Grade { get; set; }
 	}
 
